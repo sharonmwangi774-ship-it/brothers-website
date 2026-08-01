@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Car Buy & Sell System</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f4f6f9; color: #333; }
+    
+    /* Navbar */
+    header { background: #1e293b; color: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 20px; }
+    header nav a { color: #cbd5e1; text-decoration: none; margin-left: 20px; font-weight: 500; }
+    header nav a:hover { color: #fff; }
+
+    /* Layout */
+    .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+    .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+    
+    /* Card Styles */
+    .card { background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .card h2 { font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; color: #0f172a; }
+
+    /* Form Styles */
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #475569; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+    .btn { background: #2563eb; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; }
+    .btn:hover { background: #1d4ed8; }
+    .btn-danger { background: #ef4444; width: auto; padding: 5px 10px; font-size: 12px; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+    th { background: #f8fafc; color: #475569; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+    .badge-available { background: #dcfce7; color: #166534; }
+    .badge-sold { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🚗 Car System Admin Dashboard</h1>
+    <nav>
+      <a href="index.html">View Main Site</a>
+      <a href="user-dashboard.html">User Dashboard</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      
+      <!-- Left Column: Add New Car Listing -->
+      <div>
+        <div class="card">
+          <h2>Add New Car</h2>
+          <form id="addCarForm">
+            <div class="form-group">
+              <label>Car Title / Model</label>
+              <input type="text" id="carTitle" placeholder="e.g. 2020 Toyota Prado" required>
+            </div>
+            <div class="form-group">
+              <label>Price ($ or KSh)</label>
+              <input type="text" id="carPrice" placeholder="e.g. $35,000" required>
+            </div>
+            <div class="form-group">
+              <label>Image URL</label>
+              <input type="url" id="carImage" placeholder="https://example.com/car.jpg" required>
+            </div>
+            <div class="form-group">
+              <label>Description & Specs</label>
+              <textarea id="carDesc" rows="3" placeholder="Engine, mileage, condition..." required></textarea>
+            </div>
+            <button type="submit" class="btn">Publish Listing</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right Column: Inventory & Messages -->
+      <div>
+        <!-- Inventory Management -->
+        <div class="card">
+          <h2>Car Inventory Management</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Car Title</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTable">
+              <!-- Dynamically populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Buyer Messages / Inquiries -->
+        <div class="card">
+          <h2>Buyer Inquiries & Purchase Requests</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Buyer Name</th>
+                <th>Car Requested</th>
+                <th>Contact</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody id="inquiriesTable">
+              <!-- Dynamically populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Initialize Sample Data in LocalStorage if empty
+    if (!localStorage.getItem('carListings')) {
+      const initialCars = [
+        { id: 1, title: '2021 Toyota Land Cruiser', price: '$45,000', image: 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73', desc: 'Automatic, Diesel, Low Mileage', status: 'Available' },
+        { id: 2, title: '2019 Subaru Forester', price: '$22,000', image: 'https://images.unsplash.com/photo-1541348263662-e082662d82da', desc: 'AWD, Petrol, Clean Interior', status: 'Available' }
+      ];
+      localStorage.setItem('carListings', JSON.stringify(initialCars));
+    }
+
+    if (!localStorage.getItem('buyerInquiries')) {
+      const initialInquiries = [
+        { id: 1, name: 'John Doe', car: '2021 Toyota Land Cruiser', contact: 'john@gmail.com', message: 'Is the price negotiable?' }
+      ];
+      localStorage.setItem('buyerInquiries', JSON.stringify(initialInquiries));
+    }
+
+    // Render Inventory
+    function renderInventory() {
+      const cars = JSON.parse(localStorage.getItem('carListings')) || [];
+      const tbody = document.getElementById('inventoryTable');
+      tbody.innerHTML = cars.map(car => `
+        <tr>
+          <td><strong>${car.title}</strong></td>
+          <td>${car.price}</td>
+          <td><span class="badge badge-${car.status.toLowerCase()}">${car.status}</span></td>
+          <td><button class="btn btn-danger" onclick="deleteCar(${car.id})">Delete</button></td>
+        </tr>
+      `).join('');
+    }
+
+    // Render Buyer Inquiries
+    function renderInquiries() {
+      const inquiries = JSON.parse(localStorage.getItem('buyerInquiries')) || [];
+      const tbody = document.getElementById('inquiriesTable');
+      tbody.innerHTML = inquiries.map(inq => `
+        <tr>
+          <td><strong>${inq.name}</strong></td>
+          <td>${inq.car}</td>
+          <td>${inq.contact}</td>
+          <td>${inq.message}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Add New Car Form Handler
+    document.getElementById('addCarForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const cars = JSON.parse(localStorage.getItem('carListings')) || [];
+      const newCar = {
+        id: Date.now(),
+        title: document.getElementById('carTitle').value,
+        price: document.getElementById('carPrice').value,
+        image: document.getElementById('carImage').value,
+        desc: document.getElementById('carDesc').value,
+        status: 'Available'
+      };
+      cars.push(newCar);
+      localStorage.setItem('carListings', JSON.stringify(cars));
+      this.reset();
+      renderInventory();
+      alert('New car listing added successfully!');
+    });
+
+    // Delete Car
+    function deleteCar(id) {
+      let cars = JSON.parse(localStorage.getItem('carListings')) || [];
+      cars = cars.filter(c => c.id !== id);
+      localStorage.setItem('carListings', JSON.stringify(cars));
+      renderInventory();
+    }
+
+    // Initial load
+    renderInventory();
+    renderInquiries();
+  </script>
+</body>
+</html>
